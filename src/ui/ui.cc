@@ -151,14 +151,6 @@ void UI::render() {
                     ADC_getThresholdPot() >> 2,
                     cvMatrix.router.getSource(SEQUENCER_CV_DESTINATION) ? 1 : 0);
                 break;
-            case ENV_VCO_CLASSIC:
-            case ENV_VCO_DUAL:
-            case ENV_VCO_WAVEFOLDER:
-            case ENV_FOLLOWER:
-            case ENV_QUANTIZER:
-            case ENV_SAMPLE_HOLD:
-                // Placeholder - will be implemented later
-                break;
             }
         }
         break;
@@ -258,26 +250,8 @@ void UI::renderEnvSubmode() {
         case ENV_ADSR:
             loopButton.setColor(0, 255, 0);     // Green
             break;
-        case ENV_VCO_CLASSIC:
-            loopButton.setColor(255, 255, 0);   // Yellow
-            break;
-        case ENV_VCO_DUAL:
-            loopButton.setColor(255, 165, 0);   // Orange
-            break;
-        case ENV_VCO_WAVEFOLDER:
-            loopButton.setColor(255, 100, 0);   // Orange-red
-            break;
         case ENV_EBB_LFO:
             loopButton.setColor(0, 255, 255);   // Cyan
-            break;
-        case ENV_FOLLOWER:
-            loopButton.setColor(255, 0, 255);   // Magenta
-            break;
-        case ENV_QUANTIZER:
-            loopButton.setColor(128, 0, 255);   // Purple
-            break;
-        case ENV_SAMPLE_HOLD:
-            loopButton.setColor(255, 255, 255); // White
             break;
         default:
             loopButton.setColor(0, 0, 0);       // Off

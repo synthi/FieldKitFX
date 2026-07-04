@@ -80,16 +80,12 @@ enum UiStateCalibration {
 
 /*
  * ENV submodes - selected via long-press in FX mode
+ * Only implemented submodes are included in the cycle.
+ * New submodes will be added here as they are implemented.
  */
 enum EnvSubmode {
     ENV_ADSR = 0,
-    ENV_VCO_CLASSIC,
-    ENV_VCO_DUAL,
-    ENV_VCO_WAVEFOLDER,
     ENV_EBB_LFO,
-    ENV_FOLLOWER,
-    ENV_QUANTIZER,
-    ENV_SAMPLE_HOLD,
     ENV_NUM_SUBMODES
 };
 
