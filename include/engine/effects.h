@@ -2,9 +2,7 @@
 #define _ENGINE_EFFECTS_H_
 
 //#include "dsp/allpass_filter.h"
-#include "dsp/barberpole_phaser.h"
 #include "dsp/bypass.h"
-#include "dsp/chorus.h"
 #include "dsp/comb_filter.h"
 #include "dsp/decimator.h"
 #include "dsp/distfolder.h"
@@ -18,10 +16,10 @@ namespace fieldkitfx {
 
 enum EffectAlgo {
     DSP_BYPASS = 0,
-    DSP_BARBERPOLE_PHASER,
+    DSP_FREQUENCY_SHIFTER,
     DSP_TZ_FLANGER,
     DSP_PHASER,
-    DSP_CHORUS,
+    DSP_COMB_FILTER,
     DSP_DECIMATOR,
 };
 
@@ -36,10 +34,8 @@ public:
     DspParam param1, param2;
 
     EffectsLibrary() {
-        barberpole_phaser.init(shared_buffer);
         tz_flanger.init(shared_buffer);
-        chorus.init(shared_buffer);
-        // comb_filter.init(shared_buffer);
+        comb_filter.init(shared_buffer);
         // dist_folder.init(shared_buffer);
         phaser.init(shared_buffer);
         algo = (EffectAlgo)(1);
@@ -54,23 +50,21 @@ public:
 private:
     BypassEffect bypass;
     DecimatorEffect decimator;
-    BarberpolePhaserEffect barberpole_phaser;
+    FrequencyShifterEffect frequency_shifter;
     TzFlangerEffect tz_flanger;
     // AllpassFilterEffect allpass_filter;
-    // CombFilterEffect comb_filter;
-    ChorusEffect chorus;
+    CombFilterEffect comb_filter;
     // DistFolderEffect dist_folder;
     PhaserEffect phaser;
 
     static constexpr uint8_t num_effects = 6;
     DspEffect* effects[num_effects] = {
         &bypass,
-        &barberpole_phaser,
+        &frequency_shifter,
         &tz_flanger,
         &phaser,
         //&allpass_filter,
-        //&comb_filter,
-        &chorus,
+        &comb_filter,
         &decimator,
     };
 

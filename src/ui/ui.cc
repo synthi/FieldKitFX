@@ -150,7 +150,7 @@ void UI::renderFx() {
             loopButton.setColor(COL_NONE);
         }
         break;
-    case DSP_BARBERPOLE_PHASER:
+    case DSP_FREQUENCY_SHIFTER:
         if (effects_library.refreshUi) {
             loopButton.setColor(COL_BLUE);
         }
@@ -165,7 +165,7 @@ void UI::renderFx() {
             loopButton.setColor(COL_GREEN);
         }
         break;
-    case DSP_CHORUS:
+    case DSP_COMB_FILTER:
         if (effects_library.refreshUi) {
             loopButton.setColor(COL_ORANGE);
         }
