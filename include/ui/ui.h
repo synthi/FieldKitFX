@@ -30,6 +30,7 @@
 #include "hardware/rollo_selector.h"
 #include "hardware/routing_matrix.h"
 #include "engine/adsr.h"
+#include "engine/ebb_lfo.h"
 #include "engine/looper.h"
 #include "engine/sequencer.h"
 #include "utils/magnitude_tracker.h"

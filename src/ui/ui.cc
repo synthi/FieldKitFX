@@ -142,10 +142,18 @@ void UI::render() {
                     rollo_env.process_ui = 0;
                 }
                 break;
+            case ENV_EBB_LFO:
+                ebb_lfo.updateParams(
+                    rollodecks.cv_values[0] >> 2,
+                    rollodecks.cv_values[1] >> 2,
+                    rollodecks.cv_values[2] >> 2,
+                    rollodecks.cv_values[3] >> 2,
+                    ADC_getThresholdPot() >> 2,
+                    cvMatrix.router.getSource(SEQUENCER_CV_DESTINATION) ? 1 : 0);
+                break;
             case ENV_VCO_CLASSIC:
             case ENV_VCO_DUAL:
             case ENV_VCO_WAVEFOLDER:
-            case ENV_EBB_LFO:
             case ENV_FOLLOWER:
             case ENV_QUANTIZER:
             case ENV_SAMPLE_HOLD:
