@@ -1,91 +1,123 @@
 What is this
 ============
 
-This is unofficial fork of FieldKitFX firmware originally released by Koma Elektronik. Use at your own risk.
+This is a custom fork of FieldKitFX firmware originally released by Koma Elektronik.
+The original module is a eurorack effects/looper module based on STM32F303VC.
 
-Firmware builds will be uploaded once new features will be added.
+This fork adds new DSP effects, a long-press UI system for ENV submode selection,
+and implements new audio processing modules (Ebb&LFO, with more planned).
+
+Use at your own risk.
 
 Building
 ========
 
-It's configured as platformio project, so you should be able to built it yourself. See https://platformio.org/ for details. Currently is's configured to use SWDIO headers that have to be soldered, but it should also be possible to load firmware by DFU over USB cable.
+It's configured as a PlatformIO project. See https://platformio.org/ for details.
+
+.. code-block:: bash
+
+    git clone --recursive https://github.com/synthi/FieldKitFX.git
+    cd FieldKitFX
+    platformio run
+
+Currently configured to use SWDIO headers, but DFU over USB should also work.
 
 License
 =======
 
-The code in this repository is licensed under the GNU General Public License v3.0.
+GNU General Public License v3.0
 
-UI changes
-==========
+UI Overview
+===========
 
-This firmware decouples FX selection from looper control, so upper switch toggles looper control and FX selection modes. We also have more effects now.
+The module has two main switches and a multi-color RGB loop button:
 
-Barberpole phaser
------------------
+**FX Selector (2 positions): LOOP / SHIFTER**
+**Rollo Selector (2 positions): SEQ / ENV**
 
-This effect is a variation of phaser. It imitates "infinite" notch movemement going up or down.
+FX Mode (Switch = SHIFTER)
+==========================
 
-    Led color
-        Blue
+In this mode, the loop button cycles through DSP effects with a short press.
+A **long press (>2s)** enters ENV submode selection (LED blinks).
 
-    Control 1
-        Effect amount (bipolar, so you can change rising and falling movement)
+Available effects (cycled with short press):
 
-    Control 2
-        Feedback amount
++-----------------+-------------+---------------------+---------------------+
+| Effect          | LED Color   | Control 1 (CV2)     | Control 2 (CV1)     |
++=================+=============+=====================+=====================+
+| Bypass          | Off         | -                   | -                   |
++-----------------+-------------+---------------------+---------------------+
+| Frequency       | Blue        | Shift amount        | USB/LSB crossfade   |
+| Shifter         |             |                     |                     |
++-----------------+-------------+---------------------+---------------------+
+| Thru-Zero       | Pink        | Modulation depth    | Modulation rate     |
+| Flanger         |             |                     |                     |
++-----------------+-------------+---------------------+---------------------+
+| Phaser          | Green       | Depth (<12h) /      | Allpass coefficient |
+|                 |             | Rate (>12h)         |                     |
++-----------------+-------------+---------------------+---------------------+
+| Comb Filter     | Orange      | Delay time          | Feedback (+/-)      |
++-----------------+-------------+---------------------+---------------------+
+| Decimator       | Red         | Sample rate         | Bit depth           |
+|                 |             | reduction           | reduction           |
++-----------------+-------------+---------------------+---------------------+
 
-Thru-zero flanger
------------------
+ENV Submode Selection (Switch = SHIFTER + long press >2s)
+==========================================================
 
-Original analog effect was implemented by two identical tape reels, one of them was getting slowed down and sped up relative to the other.
+When in FX mode, holding the loop button for more than 2 seconds enters
+ENV submode selection. The LED blinks to indicate selection mode.
+Short press cycles between available submodes. Long press exits.
 
-    Led color
-        Pink
-    Control 1
-        Modulation depth
-    Control 2:
-        Modulation rate
++-----------------+-------------+---------------------------------------------------+
+| Submode         | LED Color   | Description                                       |
++=================+=============+===================================================+
+| ADSR            | Green       | Original ADSR envelope (Attack, Decay, Sustain,   |
+|                 |             | Release) with Gate/CV threshold mode              |
++-----------------+-------------+---------------------------------------------------+
+| Ebb & LFO       | Cyan        | Tides-like slope generator / LFO with Rate,       |
+|                 |             | Slope, Shape, Fold. 5 output modes via threshold  |
+|                 |             | pot: Gate/Oneshot, Unipolar, Bipolar, EOA, EOR    |
++-----------------+-------------+---------------------------------------------------+
 
-Phaser
-------
+Looper Mode (Switch = LOOP)
+============================
 
-A common effect based on two copies of signal with different phase offsets. Summing them gives us a moving distribution of notches due to parts of signals canceling each other.
+The looper records to external SPI SRAM (~3.6 seconds at 48kHz/12bit).
 
-    Led color
-        Green
-    Control 1
-        Modulation depth before 12 o'clock, modulation rate above 12 o'clock
-    Control 2
-        Allpass filter coefficients selection - this changes phaser character considerably
+States: ARMED (green) -> RECORD (red) -> PLAYBACK (blue) -> OVERDUB (purple) -> ERASE (white)
 
-Chorus
-------
+- Short press: start/stop recording, toggle overdub
+- DSP effects are applied BEFORE the looper (effects are recorded into the loop)
 
-This effect is based on mixing of signal with its one or more delayed copies.
+CV Routing Matrix
+=================
 
-    Led color
-        Orange
-    Control 1
-        When it's turned to less than 12 o'clock, a single sine LFO is used and this control changes modulation depth.
-        After 12 o'clock it adds a second delay line with triangular LFO running at half frequency.
-    Control 2
-        Base rate for LFOs
+11 destinations, 5 CV sources (4 physical CV inputs + internal reference).
+Each destination can be cycled through sources by pressing the corresponding button.
 
-Decimator
----------
+Destinations: AMOUNT, CONTROL, TRESHOLD, TIME, FBACK, CUTOFF, FBACK (SPRING), VCA1-4
 
-This effect was present in original firmare and is mostly unchanged.
+Sequencer (Rollo = SEQ)
+=======================
 
-    Led color
-        Red
-    Control 1
-        Samplerate reduction amount
-    Control 2
-        Bit depth reduction amount
-
+4-step sequencer with CV outputs via DAC.
+Each step uses one Roll-O-Deck knob for its CV value.
+Threshold pot controls step timing (gate or CV mode).
 
 Release history
 ===============
+
+1.0.0 (current)
+---------------
+
+* Replaced Barberpole Phaser with Frequency Shifter (original effect restored)
+* Replaced Chorus with Comb Filter
+* Added long-press UI system for ENV submode selection
+* Implemented Ebb & LFO (Tides-like slope generator/LFO)
+* Fixed PlatformIO board configuration for modern toolchain
+* Added stmlib submodule dependency
 
 0.3.1
 -----
