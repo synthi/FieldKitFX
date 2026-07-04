@@ -44,6 +44,16 @@
  */
 #define NUMBEROFUISTATES 7
 
+/*
+ * Long-press threshold for entering ENV submode selection (in ms)
+ */
+#define ENV_LONGPRESS_THRESHOLD 2000
+
+/*
+ * Blink interval for ENV selection mode (in ms)
+ */
+#define ENV_BLINK_INTERVAL 250
+
 namespace fieldkitfx {
 
 enum UiState {
@@ -67,6 +77,21 @@ enum UiStateCalibration {
     UI_renderMagnitude_Calibration
 };
 
+/*
+ * ENV submodes - selected via long-press in FX mode
+ */
+enum EnvSubmode {
+    ENV_ADSR = 0,
+    ENV_VCO_CLASSIC,
+    ENV_VCO_DUAL,
+    ENV_VCO_WAVEFOLDER,
+    ENV_EBB_LFO,
+    ENV_FOLLOWER,
+    ENV_QUANTIZER,
+    ENV_SAMPLE_HOLD,
+    ENV_NUM_SUBMODES
+};
+
 class UI {
 private:
     UiState current_ui_state;
@@ -76,9 +101,21 @@ private:
     void renderLooper();
     void renderFx();
 
+    /* ENV submode selection */
+    EnvSubmode current_env_submode;
+    bool env_selection_mode;  // true when in ENV selection mode (long-press active)
+    uint32_t env_selection_start_time;
+    bool env_blink_state;
+
+    void renderEnvSubmode();
+    void enterEnvSelectionMode();
+    void exitEnvSelectionMode();
+    void cycleEnvSubmode();
+
 public:
     MagnitudeTracker magnitude_tracker;
-    UI() {};
+    UI() : current_env_submode(ENV_ADSR), env_selection_mode(false),
+           env_selection_start_time(0), env_blink_state(true) {};
     void init();
     void render();
     void initCalibration();

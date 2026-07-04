@@ -97,7 +97,12 @@ void UI::render() {
             renderLooper();
         }
         else {
-            renderFx();
+            if (env_selection_mode) {
+                renderEnvSubmode();
+            }
+            else {
+                renderFx();
+            }
         }
         break;
     case UI_modeSwitches_update:
@@ -118,19 +123,34 @@ void UI::render() {
             sequencer.setMode(cvMatrix.router.getSource(SEQUENCER_CV_DESTINATION));
         }
         else {
-            rollo_env.processAdsrCv(rollodecks.cv_values[0] >> 2,
-                rollodecks.cv_values[1] >> 2, rollodecks.cv_values[2] >> 2,
-                rollodecks.cv_values[3] >> 2);
-            rollo_env.processThresholdPot(ADC_getThresholdPot() >> 2);
-            if (rollo_env.process_ui) {
-                rollo_env.setLengthThreshold();
-                rollo_env.setMode(ADC_getThresholdPot() >> 2,
-                    cvMatrix.router.getSource(SEQUENCER_CV_DESTINATION));
-                rollo_env.setA();
-                rollo_env.setD();
-                rollo_env.setS();
-                rollo_env.setR();
-                rollo_env.process_ui = 0;
+            // In ENV mode, route to the current submode
+            switch (current_env_submode) {
+            case ENV_ADSR:
+            default:
+                rollo_env.processAdsrCv(rollodecks.cv_values[0] >> 2,
+                    rollodecks.cv_values[1] >> 2, rollodecks.cv_values[2] >> 2,
+                    rollodecks.cv_values[3] >> 2);
+                rollo_env.processThresholdPot(ADC_getThresholdPot() >> 2);
+                if (rollo_env.process_ui) {
+                    rollo_env.setLengthThreshold();
+                    rollo_env.setMode(ADC_getThresholdPot() >> 2,
+                        cvMatrix.router.getSource(SEQUENCER_CV_DESTINATION));
+                    rollo_env.setA();
+                    rollo_env.setD();
+                    rollo_env.setS();
+                    rollo_env.setR();
+                    rollo_env.process_ui = 0;
+                }
+                break;
+            case ENV_VCO_CLASSIC:
+            case ENV_VCO_DUAL:
+            case ENV_VCO_WAVEFOLDER:
+            case ENV_EBB_LFO:
+            case ENV_FOLLOWER:
+            case ENV_QUANTIZER:
+            case ENV_SAMPLE_HOLD:
+                // Placeholder - will be implemented later
+                break;
             }
         }
         break;
@@ -143,6 +163,12 @@ void UI::renderFx() {
     if (loopButton.checkRisingEdge()) {
         effects_library.refreshUi = true;
         effects_library.nextEffect();
+    }
+    // Check for long-press to enter ENV selection mode
+    if (loopButton.isLongPress() && !env_selection_mode) {
+        if (HAL_GetTick() - loopButton.getLastUpTimestamp() > ENV_LONGPRESS_THRESHOLD) {
+            enterEnvSelectionMode();
+        }
     }
     switch (effects_library.algo) {
     case DSP_BYPASS:
@@ -175,6 +201,83 @@ void UI::renderFx() {
             loopButton.setColor(COL_RED);
         }
         break;
+    }
+}
+
+void UI::enterEnvSelectionMode() {
+    env_selection_mode = true;
+    env_selection_start_time = HAL_GetTick();
+    env_blink_state = true;
+    // Set LED to indicate we're in ENV selection mode
+    loopButton.setIntensity(LOOPLED_HIGH_INTENSITY);
+}
+
+void UI::exitEnvSelectionMode() {
+    env_selection_mode = false;
+    loopButton.setIntensity(LOOPLED_NORMAL_INTENSITY);
+    effects_library.refreshUi = true;
+}
+
+void UI::cycleEnvSubmode() {
+    current_env_submode = (EnvSubmode)(((uint8_t)current_env_submode + 1) % ENV_NUM_SUBMODES);
+    env_selection_start_time = HAL_GetTick(); // reset timeout
+}
+
+void UI::renderEnvSubmode() {
+    // Blink the LED to indicate we're in selection mode
+    uint32_t now = HAL_GetTick();
+    if (now - env_selection_start_time > ENV_BLINK_INTERVAL * 2) {
+        env_blink_state = !env_blink_state;
+        env_selection_start_time = now;
+    }
+
+    // Short-press cycles through ENV submodes
+    if (loopButton.checkRisingEdge()) {
+        cycleEnvSubmode();
+    }
+
+    // Long-press or timeout exits ENV selection mode
+    if (loopButton.checkFallingEdge()) {
+        if (loopButton.wasLongPress()) {
+            exitEnvSelectionMode();
+            return;
+        }
+    }
+
+    // Set LED color based on current ENV submode (blinking)
+    if (env_blink_state) {
+        switch (current_env_submode) {
+        case ENV_ADSR:
+            loopButton.setColor(0, 255, 0);     // Green
+            break;
+        case ENV_VCO_CLASSIC:
+            loopButton.setColor(255, 255, 0);   // Yellow
+            break;
+        case ENV_VCO_DUAL:
+            loopButton.setColor(255, 165, 0);   // Orange
+            break;
+        case ENV_VCO_WAVEFOLDER:
+            loopButton.setColor(255, 100, 0);   // Orange-red
+            break;
+        case ENV_EBB_LFO:
+            loopButton.setColor(0, 255, 255);   // Cyan
+            break;
+        case ENV_FOLLOWER:
+            loopButton.setColor(255, 0, 255);   // Magenta
+            break;
+        case ENV_QUANTIZER:
+            loopButton.setColor(128, 0, 255);   // Purple
+            break;
+        case ENV_SAMPLE_HOLD:
+            loopButton.setColor(255, 255, 255); // White
+            break;
+        default:
+            loopButton.setColor(0, 0, 0);       // Off
+            break;
+        }
+    }
+    else {
+        loopButton.setColor(0, 0, 0); // Off during blink
     }
 }
 

@@ -69,6 +69,7 @@ public:
     bool isLow();
     bool isHigh();
     void resetStates();
+    uint32_t getLastUpTimestamp() { return last_up_timestamp; };
 };
 
 extern LoopButton loopButton;
